@@ -1,0 +1,65 @@
+name: UNIT_TEST
+on: [push]
+jobs:
+  run-utest-on-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Display system architecture
+        run: |
+          echo "Operating System: $(uname -o)"
+          echo "Machine Hardware Name: $(uname -m)"
+          echo "Kernel Release: $(uname -r)"
+          echo "Processor Type: $(uname -p)"      
+
+      - name: Install Docker engine
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          docker --version
+
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Build
+        run: make
+
+      - name: Run make info
+        run: make info
+
+      - name: Run make test
+        run: make test
+
+  run-utest-on-macos:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Display system architecture
+        run: |
+          echo "Operating System: $(uname -o)"
+          echo "Machine Hardware Name: $(uname -m)"
+          echo "Kernel Release: $(uname -r)"
+          echo "Processor Type: $(uname -p)"      
+
+      - name: Install packages
+        run: |
+          pip install --upgrade pip && \
+          pip install --no-cache-dir -r config/requirements.txt
+
+      - name: Run pytest
+        run: pytest -v -c config/pytest.ini

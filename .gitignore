@@ -1,5 +1,26 @@
 *
 
 !.gitignore
+!.gitkeep
 
+!.github
+!.github/workflows
+!.github/workflows/lint.yml
+!.github/workflows/utest.yml
+
+!config
+!config/.flake8
+!config/Dockerfile
+!config/jupyter_notebook_config.py
+!config/pytest.ini
+!config/requirements.txt
+
+!srcs
+
+!tests
+!tests/utest
+!tests/utest/*.py
+
+!compose.yml
+!Makefile
 !README.md
