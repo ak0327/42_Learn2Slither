@@ -1,6 +1,11 @@
 *
 
 !.gitignore
+!.gitkeep
+
+!.github
+!.github/workflows
+!.github/workflows/lint.yml
 
 !config
 !config/Dockerfile
@@ -8,8 +13,8 @@
 !config/pytest.ini
 !config/requirements.txt
 
+!srcs
 
 !compose.yml
 !Makefile
-
 !README.md
