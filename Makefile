@@ -31,9 +31,9 @@ lint:
 exec:
 	docker compose exec learn2slither sh
 
-#.PHONY: test
-#test:
-#	docker compose exec learn2slither pytest -v -c config/pytest.ini
+.PHONY: test
+test:
+	docker compose exec learn2slither pytest -v -c config/pytest.ini
 
 .PHONY: clean
 clean:

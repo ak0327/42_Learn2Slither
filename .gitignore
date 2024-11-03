@@ -6,6 +6,7 @@
 !.github
 !.github/workflows
 !.github/workflows/lint.yml
+!.github/workflows/utest.yml
 
 !config
 !config/Dockerfile
@@ -14,6 +15,10 @@
 !config/requirements.txt
 
 !srcs
+
+!tests
+!tests/utest
+!tests/utest/*.py
 
 !compose.yml
 !Makefile
