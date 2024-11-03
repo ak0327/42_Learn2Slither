@@ -25,7 +25,7 @@ info:
 
 .PHONY: lint
 lint:
-	@docker compose exec learn2slither flake8 srcs
+	@docker compose exec learn2slither flake8 --config=config/.flake8 srcs
 
 .PHONY: exec
 exec:

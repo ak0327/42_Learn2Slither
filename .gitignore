@@ -9,6 +9,7 @@
 !.github/workflows/utest.yml
 
 !config
+!config/.flake8
 !config/Dockerfile
 !config/jupyter_notebook_config.py
 !config/pytest.ini
