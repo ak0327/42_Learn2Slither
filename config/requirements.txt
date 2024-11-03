@@ -1,0 +1,11 @@
+matplotlib
+notebook
+numpy
+pandas
+tqdm
+
+## Linter ################
+flake8
+
+## Test ##################
+pytest

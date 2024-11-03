@@ -2,4 +2,14 @@
 
 !.gitignore
 
+!config
+!config/Dockerfile
+!config/jupyter_notebook_config.py
+!config/pytest.ini
+!config/requirements.txt
+
+
+!compose.yml
+!Makefile
+
 !README.md
