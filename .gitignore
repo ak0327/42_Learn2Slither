@@ -2,6 +2,7 @@
 
 !.gitignore
 !.gitkeep
+!.gitattributes
 
 !.github
 !.github/workflows
