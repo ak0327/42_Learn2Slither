@@ -1,3 +1,5 @@
+from srcs.modules.parser import str_expected, int_expected
+
 import sys
 import argparse
 
@@ -5,8 +7,6 @@ from distutils.util import strtobool
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
-
-from srcs.modules.parser import str_expected, int_expected
 
 
 def main(random_state: int = 42):
@@ -50,7 +50,7 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-    print(f"args:")
+    print("args:")
     print(f" visual  : {args.visual}")
     print(f" load    : {args.load}")
     print(f" save    : {args.save}")
