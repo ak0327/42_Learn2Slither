@@ -17,11 +17,16 @@
 !config/requirements.txt
 
 !srcs
+!srcs/snake.py
+
+!srcs/modules
+!srcs/modules/parser.py
 
 !tests
 !tests/utest
 !tests/utest/*.py
 
+!__init__.py
 !compose.yml
 !Makefile
 !README.md

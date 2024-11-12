@@ -1,6 +1,6 @@
 matplotlib
 notebook
-numpy
+numpy==1.26.0
 pandas
 tqdm
 
@@ -9,3 +9,7 @@ flake8
 
 ## Test ##################
 pytest
+
+## playground ############
+# dezero==0.0.13
+# gym==0.25.2
