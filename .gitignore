@@ -22,6 +22,7 @@
 !srcs/modules
 !srcs/modules/parser.py
 !srcs/modules/environment.py
+!srcs/modules/agent.py
 
 !tests
 !tests/utest
