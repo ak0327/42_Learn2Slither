@@ -3,6 +3,7 @@ notebook
 numpy==1.26.0
 pandas
 tqdm
+colorama
 
 ## Linter ################
 flake8
@@ -11,5 +12,5 @@ flake8
 pytest
 
 ## playground ############
-# dezero==0.0.13
+dezero==0.0.13
 # gym==0.25.2

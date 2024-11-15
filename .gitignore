@@ -21,6 +21,7 @@
 
 !srcs/modules
 !srcs/modules/parser.py
+!srcs/modules/environment.py
 
 !tests
 !tests/utest
