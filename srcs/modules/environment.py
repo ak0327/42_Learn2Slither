@@ -23,10 +23,10 @@ class BoardElements:
 
         def with_direction(self, direction):
             direction_to_char = {
-                (0,  1): ">",
-                (0, -1): "<",
-                (-1,  0): "^",
-                (1,  0): "v",
+                MoveTo.UP.direction: "^",
+                MoveTo.DOWN.direction: "v",
+                MoveTo.LEFT.direction: "<",
+                MoveTo.RIGHT.direction: ">",
             }
             return self.__class__(direction_to_char.get(direction, self), self.color)
 
@@ -36,6 +36,12 @@ class BoardElements:
     GREEN_APPLE = _Element("G", Fore.GREEN)
     RED_APPLE = _Element("R", Fore.RED)
     EMPTY = _Element("0", Fore.LIGHTBLACK_EX)
+
+    _elements = [WALL, SNAKE_HEAD, SNAKE_BODY, GREEN_APPLE, RED_APPLE, EMPTY]
+
+    @classmethod
+    def all_elements(cls):
+        return cls._ordered_elements
 
 
 class MoveTo(Enum):
@@ -64,9 +70,10 @@ class Board:
         self.NUM_OF_GREEN_APPLES = 2
         self.NUM_OF_RED_APPLES = 1
 
-        self.SCORE_EAT_GREEN_APPLE = 1
-        self.SCORE_EAT_RED_APPLE = -1
-        self.SCORE_COLLISION = -1
+        self.REWARD_JUST_MOVE = -5
+        self.REWARD_EAT_GREEN_APPLE = 500
+        self.REWARD_EAT_RED_APPLE = -100
+        self.REWARD_GAME_OVER = -2000
 
         self.snake = deque()  # deque([head, .., tail])
         self.green_apples = []
@@ -81,10 +88,9 @@ class Board:
         self._init_apples()
 
         self.done = False
-        self.score = 0
-
         # self.update_board()
         # self.draw()
+        return self._encode_state()
 
     def _init_snake(self):
         head_y = random.randint(0, self.board_size - 1)
@@ -181,49 +187,49 @@ class Board:
         return False
 
     def _move_to_direction(self):
+        """
+        move snake
+        returen reward
+        """
         next_head_y = self.snake[0][0] + self.snake_direction[0]
         next_head_x = self.snake[0][1] + self.snake_direction[1]
         new_head = (next_head_y, next_head_x)
 
         if self._is_collision(new_head):
             self.done = True
-            self.score = self.SCORE_COLLISION
-            return Status.FAILURE
+            return self.REWARD_GAME_OVER
 
+        reward = 0
         if new_head in self.green_apples:
-            self.score += self.SCORE_EAT_GREEN_APPLE
             self.green_apples.remove(new_head)
             self._extend_snake()
             self._put_apple(apple=BoardElements.GREEN_APPLE)
+            reward = self.REWARD_EAT_GREEN_APPLE
         elif new_head in self.red_apples:
-            self.score += self.SCORE_EAT_RED_APPLE
             self.red_apples.remove(new_head)
             self._shrink_snake()
             self._put_apple(apple=BoardElements.RED_APPLE)
+            reward = self.REWARD_EAT_RED_APPLE
             if len(self.snake) == 0:
                 self.done = True
-                return Status.FAILURE
+                return self.REWARD_GAME_OVER
+        else:
+            reward = self.REWARD_JUST_MOVE
 
         self.snake.appendleft(new_head)
         self.snake.pop()
-        return Status.SUCCESS
+        return reward
 
     def step(self, action):
         if self.done:
-            return self.board, self.score, self.done
+            return self.board, 0, self.done
 
-        if action == MoveTo.UP:
-            self.snake_direction = MoveTo.UP.direction
-        elif action == MoveTo.DOWN:
-            self.snake_direction = MoveTo.DOWN.direction
-        elif action == MoveTo.LEFT:
-            self.snake_direction = MoveTo.LEFT.direction
-        else:
-            self.snake_direction = MoveTo.RIGHT.direction
+        action = list(MoveTo)[action]
+        self.snake_direction = action.direction
 
-        self._move_to_direction()
+        reward = self._move_to_direction()
         self.update_board()
-        return self.board, self.score, self.done
+        return self._encode_state(), reward, self.done
 
     def _fill_snake(self):
         for i, segment in enumerate(self.snake):
@@ -243,6 +249,58 @@ class Board:
         self.board.fill(BoardElements.EMPTY)
         self._fill_snake()
         self._fill_apples()
+
+    def _encode_state(self):
+        """
+        Encode state for agent:
+        - 4 directions from head (UP, DOWN, LEFT, RIGHT)
+        - Each direction has 4 features (wall, body, green apple, red apple)
+        """
+        NUM_DIRECTIONS = len(MoveTo)  # 4方向
+        FEATURES = 4  # 各視界の特徴量(壁, 体, 緑リンゴ, 赤リンゴ）
+        FEATURE_WALL = 0
+        FEATURE_BODY = 1
+        FEATURE_GREEN_APPLE = 2
+        FEATURE_RED_APPLE = 3
+
+        state = np.zeros((NUM_DIRECTIONS, FEATURES), dtype=np.float32)
+
+        if len(self.snake) == 0:
+            return state.flatten()[np.newaxis, :]
+
+        head_pos = self.snake[0]
+        for to in MoveTo:
+            id = to.id
+            direction = to.direction
+
+            dy = direction[0]
+            dx = direction[1]
+
+            distance = 0
+            distances = [0, 0, 0, 0]
+
+            y, x = head_pos[0], head_pos[1]
+            while 0 <= y < self.board_size and 0 <= x < self.board_size:
+                y += dy
+                x += dx
+                distance += 1
+
+                if y < 0 or self.board_size <= y or x < 0 or self.board_size <= x:
+                    distances[FEATURE_WALL] = distance
+                    break
+                if self.board[y][x] == BoardElements.SNAKE_BODY:
+                    distances[FEATURE_BODY] = distance
+                    break
+                if self.board[y][x] == BoardElements.GREEN_APPLE:
+                    distances[FEATURE_GREEN_APPLE] = distance
+                    break
+                if self.board[y][x] == BoardElements.RED_APPLE:
+                    distances[FEATURE_RED_APPLE] = distance
+                    break
+
+            state[id] = distances
+
+        return state.flatten()[np.newaxis, :]  # (1, NUM_DIRECTIONS * FEATURES)
 
     def draw(self):
         """
@@ -268,10 +326,17 @@ class Board:
             print(row)
 
         print()
-        print(f"Snake Direction: {self.snake_direction}")
-        print(f"Snake          : {self.snake}")
-        print(f"GreenApples    : {self.green_apples}")
-        print(f"RedApples      : {self.red_apples}")
-        print(f"Score          : {self.score}")
-        print(f"Game Done      : {self.done}")
+        print(f" Snake Direction: {self.snake_direction}")
+        print(f" Snake          : {self.snake}")
+        print(f" SnakeLength    : {len(self.snake)}")
+        print(f" GreenApples    : {self.green_apples}")
+        print(f" RedApples      : {self.red_apples}")
+        print(f" Game Done      : {self.done}")
         print("-" * 20)
+
+    def draw_with_q_values(self, qs):
+        """現在の状態のQ値を可視化"""
+        self.draw()  # 既存の描画
+        print("\nQ-Values for each direction:")
+        for direction, q_val in zip(MoveTo, qs[0]):
+            print(f" {direction.name}: {q_val:.3f}")
