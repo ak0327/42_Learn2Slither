@@ -36,6 +36,10 @@ lint:
 exec:
 	docker compose exec learn2slither sh
 
+.PHONY: run
+run:
+	docker compose exec learn2slither python3 srcs/snake.py
+
 .PHONY: test
 test:
 	docker compose exec learn2slither pytest -v -c config/pytest.ini
