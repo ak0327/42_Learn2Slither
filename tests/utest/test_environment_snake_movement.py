@@ -268,7 +268,7 @@ class TestEnvironmentSnakeMovement:
         expected_snake = deque([])
         expected_num_of_green_apples = 2
         expected_num_of_red_apples = 1
-        expected_reward = board.REWARD_GAME_OVER
+        expected_reward = board.REWARD_WALL_COLLISION
         expected_done = True
 
         self._assert_state(
@@ -318,7 +318,7 @@ class TestEnvironmentSnakeMovement:
         _, actual_reward, _ = board.step(action=MoveTo.RIGHT)
         # board.draw()
 
-        expected_reward = board.REWARD_GAME_OVER
+        expected_reward = board.REWARD_WALL_COLLISION
         expected_done = True
 
         self._assert_state(
@@ -352,7 +352,7 @@ class TestEnvironmentSnakeMovement:
         # board.draw()
         _, actual_reward, _ = board.step(action=MoveTo.LEFT)
 
-        expected_reward = board.REWARD_GAME_OVER
+        expected_reward = board.REWARD_BODY_COLLISION
         expected_done = True
 
         self._assert_state(

@@ -80,6 +80,8 @@ class Board:
         self.REWARD_JUST_MOVE = -0.1
         self.REWARD_EAT_GREEN_APPLE = 50
         self.REWARD_EAT_RED_APPLE = -20
+        self.REWARD_BODY_COLLISION = -100
+        self.REWARD_WALL_COLLISION = -20
         self.REWARD_GAME_OVER = -100
 
         self.snake = deque()  # deque([head, .., tail])
@@ -182,15 +184,14 @@ class Board:
             return True
         return False
 
+    def _is_body_collision(self, pos: tuple):
+        return pos in self.snake
+
     def _is_collision(self, pos: tuple):
         """
         Check for collisions with walls and own body
         """
-        if self._is_wall_collision(pos):
-            return True
-        if pos in self.snake:
-            return True
-        return False
+        return self._is_wall_collision(pos) or self._is_body_collision(pos)
 
     def _move_to_direction(self):
         """
@@ -201,9 +202,15 @@ class Board:
         next_head_x = self.snake[0][1] + self.snake_direction[1]
         new_head = (next_head_y, next_head_x)
 
-        if self._is_collision(new_head):
+        if self._is_wall_collision(new_head):
             self.done = True
-            return self.REWARD_GAME_OVER
+            self.wall_collision_count += 1
+            return self.REWARD_WALL_COLLISION
+
+        if self._is_body_collision(new_head):
+            self.done = True
+            self.body_collision_count += 1
+            return self.REWARD_WALL_COLLISION
 
         reward = 0
         if new_head in self.green_apples:
