@@ -1,20 +1,27 @@
-import copy
-
 from modules.parser import str_expected, int_expected
 from modules.environment import Board
 from modules.agent import QLearningAgent
 
-import sys
 import argparse
+import copy
 import matplotlib.pyplot as plt
+import random
+import sys
 
 import torch
+import numpy as np
 
 from distutils.util import strtobool
 from tqdm import tqdm
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
 
 def train(visual):
@@ -108,7 +115,21 @@ def train(visual):
 
 
 def main(visual, random_state: int = 42):
-    train(visual)
+    try:
+        set_seed(random_state)
+        train(visual)
+
+    except Exception as e:
+        print(f"Fatal error: {str(e)}")
+        print("Traceback:")
+        _tb = e.__traceback__
+        while _tb is not None:
+            _filename = _tb.tb_frame.f_code.co_filename
+            _line_number = _tb.tb_lineno
+            print(f"File '{_filename}', line {_line_number}")
+            _tb = _tb.tb_next
+        print(f"Error: {str(e)}")
+        sys.exit(1)
 
 
 def parse_arguments():
