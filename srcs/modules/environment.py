@@ -82,7 +82,7 @@ class Board:
         self.REWARD_EAT_RED_APPLE = -5
         self.REWARD_BODY_COLLISION = -100
         self.REWARD_WALL_COLLISION = -20
-        self.REWARD_GAME_OVER = -20
+        self.REWARD_BODY_EMPTY = -20
 
         self.snake = deque()  # deque([head, .., tail])
         self.green_apples = []
@@ -217,7 +217,7 @@ class Board:
         if self._is_body_collision(new_head):
             self.done = True
             self.body_collision_count += 1
-            return self.REWARD_WALL_COLLISION
+            return self.REWARD_BODY_COLLISION
 
         reward = 0
         if new_head in self.green_apples:
@@ -235,7 +235,7 @@ class Board:
             if len(self.snake) == 0:
                 self.done = True
                 self.body_empty_count += 1
-                return self.REWARD_GAME_OVER
+                reward = self.REWARD_BODY_EMPTY
         else:
             reward = self.REWARD_JUST_MOVE
 
