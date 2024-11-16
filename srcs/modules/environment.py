@@ -77,7 +77,7 @@ class Board:
         self.NUM_OF_GREEN_APPLES = 2
         self.NUM_OF_RED_APPLES = 1
 
-        self.REWARD_JUST_MOVE = -1
+        self.REWARD_JUST_MOVE = -0.1
         self.REWARD_EAT_GREEN_APPLE = 50
         self.REWARD_EAT_RED_APPLE = -20
         self.REWARD_GAME_OVER = -100
@@ -142,7 +142,6 @@ class Board:
                              f" or {BoardElements.RED_APPLE}")
 
         empty_cells = np.argwhere(self.board == BoardElements.EMPTY)
-        empty_cells += len(self.snake)
         if len(empty_cells) == 0:
             raise ValueError("Error: No empty cell")
 
@@ -231,9 +230,7 @@ class Board:
         if self.done:
             return self.board, 0, self.done
 
-        # action = list(MoveTo)[action]
         self.snake_direction = action.direction
-
         reward = self._move_to_direction()
         self.update_board()
         return self._encode_state(), reward, self.done
@@ -284,7 +281,7 @@ class Board:
             dx = direction[1]
 
             distance = 0
-            distances = [0, 0, 0, 0]
+            distances = [0.0, 0.0, 0.0, 0.0]
 
             y, x = head_pos[0], head_pos[1]
             while 0 <= y < self.board_size and 0 <= x < self.board_size:
@@ -293,16 +290,16 @@ class Board:
                 distance += 1
 
                 if y < 0 or self.board_size <= y or x < 0 or self.board_size <= x:
-                    distances[FEATURE_WALL] = distance
+                    distances[FEATURE_WALL] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.SNAKE_BODY:
-                    distances[FEATURE_BODY] = distance
+                    distances[FEATURE_BODY] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.GREEN_APPLE:
-                    distances[FEATURE_GREEN_APPLE] = distance
+                    distances[FEATURE_GREEN_APPLE] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.RED_APPLE:
-                    distances[FEATURE_RED_APPLE] = distance
+                    distances[FEATURE_RED_APPLE] = distance / self.board_size
                     break
 
             state[id] = distances

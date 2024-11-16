@@ -78,15 +78,17 @@ def train(visual):
             max_board = copy.deepcopy(env)
 
         if visual == "on" and (session + 1 == 1 or (session + 1) % visualization_interval == 0):
-            q_values = agent.qnet(torch.tensor(state, dtype=torch.float32)).detach().numpy()
+            state_tensor = torch.tensor(state, dtype=torch.float32)
+            q_values = agent.qnet(state_tensor).detach().numpy()
             env.draw_with_q_values(q_values)
-            print(f"\nSession [{session + 1} / {sessions + 1}]")
+            print(f"\n{'=' * 50}\n")
+            print(f"Session [{session + 1} / {sessions + 1}]")
             print(f"Itrs         : {itr}")
             print(f"Total Reward : {total_reward}")
-            print(f"Average Loss : {average_loss:.1f}")
+            print(f"Average Loss : {average_loss:.1f}\n")
             print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
             print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions")
-            print(f"{'-' * 50}\n")
+            print(f"{'=' * 50}\n")
 
     print(f"max len: {max_len}")
     print("board:")
