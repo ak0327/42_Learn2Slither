@@ -100,7 +100,7 @@ class TestEnvironmentSnakeMovement:
         expected_snake_direction = MoveTo.RIGHT.direction
         expected_green_apples = [(6, 4), (6, 5)]
         expected_red_apples = [(4, 5)]
-        expected_reward = 0
+        expected_reward = board.REWARD_JUST_MOVE
         expected_done = False
 
         self._assert_state(
@@ -305,7 +305,7 @@ class TestEnvironmentSnakeMovement:
         for _ in range(4):
             _, actual_reward, _ = board.step(action=MoveTo.RIGHT)
             # board.draw()
-            expected_reward = 0
+            expected_reward = board.REWARD_JUST_MOVE
             expected_done = False
 
             self._assert_state(

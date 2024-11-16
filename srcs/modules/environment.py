@@ -129,7 +129,7 @@ class Board:
         for _ in range(self.NUM_OF_RED_APPLES):
             self._put_apple(apple=BoardElements.RED_APPLE)
 
-    def _put_apple(self, apple):
+    def _put_apple(self, apple: str):
         if apple != BoardElements.GREEN_APPLE and apple != BoardElements.RED_APPLE:
             raise ValueError(f"Error: Apple must be {BoardElements.GREEN_APPLE}"
                              f" or {BoardElements.RED_APPLE}")
@@ -169,14 +169,14 @@ class Board:
             return
         self.snake.pop()
 
-    def _is_wall_collision(self, pos):
+    def _is_wall_collision(self, pos: tuple):
         if pos[0] < 0 or self.board_size <= pos[0]:
             return True
         if pos[1] < 0 or self.board_size <= pos[1]:
             return True
         return False
 
-    def _is_collision(self, pos):
+    def _is_collision(self, pos: tuple):
         """
         Check for collisions with walls and own body
         """
@@ -220,11 +220,10 @@ class Board:
         self.snake.pop()
         return reward
 
-    def step(self, action):
+    def step(self, action: MoveTo):
         if self.done:
             return self.board, 0, self.done
 
-        action = list(MoveTo)[action]
         self.snake_direction = action.direction
 
         reward = self._move_to_direction()
@@ -334,7 +333,7 @@ class Board:
         print(f" Game Done      : {self.done}")
         print("-" * 20)
 
-    def draw_with_q_values(self, qs):
+    def draw_with_q_values(self, qs: np.ndarray):
         """現在の状態のQ値を可視化"""
         self.draw()  # 既存の描画
         print("\nQ-Values for each direction:")
