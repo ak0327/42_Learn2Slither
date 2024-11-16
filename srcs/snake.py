@@ -19,8 +19,8 @@ def train(visual):
     env = Board()
     agent = QLearningAgent()
 
-    episodes = 10000
-    visualization_interval = episodes // 10
+    sessions = 10000
+    visualization_interval = sessions // 10
 
     max_len = 0
     max_len_itrs = 0
@@ -32,7 +32,7 @@ def train(visual):
     snake_len_history = []
     ave_len_history = []
 
-    for episode in tqdm(range(episodes), desc="Training"):
+    for session in tqdm(range(sessions), desc="Training"):
         state = env.reset()
         total_loss = 0
         total_reward = 0
@@ -69,14 +69,14 @@ def train(visual):
             max_len_rewards = total_reward
             max_board = copy.deepcopy(env)
 
-        if visual == "on" and (episode == 0 or (episode + 1) % visualization_interval == 0):
+        if visual == "on" and (session + 1 == 1 or (session + 1) % visualization_interval == 0):
             env.draw_with_q_values(agent.qnet(state).data)
-            print(f"\nEpisode {episode + 1}:")
+            print(f"\nSession [{session + 1} / {sessions + 1}]")
             print(f"Itrs         : {itr}")
             print(f"Total Reward : {total_reward}")
-            print(f"Average Loss : {average_loss:.2f}")
-            print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} episodes")
-            print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, total_reward:{max_len_rewards:.2f})")
+            print(f"Average Loss : {average_loss:.1f}")
+            print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
+            print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions")
             print("-" * 50)
 
     print(f"max len: {max_len}")
