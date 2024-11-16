@@ -1,3 +1,6 @@
+GREEN = \033[0;32m
+NC = \033[0m
+
 .PHONY: all
 all: build
 
@@ -25,7 +28,9 @@ info:
 
 .PHONY: lint
 lint:
-	@docker compose exec learn2slither flake8 --config=config/.flake8 srcs
+	@if docker compose exec learn2slither flake8 --config=config/.flake8 srcs; then \
+		echo "${GREEN}LINT OK${NC}"; \
+	fi
 
 .PHONY: exec
 exec:
