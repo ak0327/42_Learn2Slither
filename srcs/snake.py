@@ -109,10 +109,12 @@ def train(visual):
             print(f" Total Reward : {total_reward:.2f}")
             print(f" Average Loss : {average_loss:.1f}\n")
 
-            print(f"{Fore.CYAN} Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f}){Style.RESET_ALL}")
-            print(f"{Fore.CYAN} Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions\n{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}"
+                  f" Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
+            print(f" Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions\n"
+                  f"{Style.RESET_ALL}")
 
-            print(f"Game Over")
+            print("Game Over")
             print(f" Wall Collision: {wall_collision_history[-1]:.1f}%")
             print(f" Body Collision: {body_collision_history[-1]:.1f}%")
             print(f" Body Empty    : {body_empty_history[-1]:.1f}%")

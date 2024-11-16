@@ -35,7 +35,7 @@ class BoardElements:
     SNAKE_BODY = _Element("S", Fore.BLUE)
     GREEN_APPLE = _Element("G", Fore.GREEN)
     RED_APPLE = _Element("R", Fore.RED)
-    EMPTY  = _Element("0", Fore.LIGHTBLACK_EX)
+    EMPTY = _Element("0", Fore.LIGHTBLACK_EX)
 
     _elements = [WALL, SNAKE_HEAD, SNAKE_BODY, GREEN_APPLE, RED_APPLE, EMPTY]
 
