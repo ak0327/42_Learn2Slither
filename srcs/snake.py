@@ -8,6 +8,8 @@ import sys
 import argparse
 import matplotlib.pyplot as plt
 
+import torch
+
 from distutils.util import strtobool
 from tqdm import tqdm
 from pathlib import Path
@@ -38,7 +40,6 @@ def train(visual):
         total_reward = 0
         itr = 0
         done = False
-        episode_len = []
 
         # MAX_STEPS_PER_EPISODE = 100
         while not done:
@@ -70,17 +71,18 @@ def train(visual):
             max_board = copy.deepcopy(env)
 
         if visual == "on" and (session + 1 == 1 or (session + 1) % visualization_interval == 0):
-            env.draw_with_q_values(agent.qnet(state).data)
+            q_values = agent.qnet(torch.tensor(state, dtype=torch.float32)).detach().numpy()
+            env.draw_with_q_values(q_values)
             print(f"\nSession [{session + 1} / {sessions + 1}]")
             print(f"Itrs         : {itr}")
             print(f"Total Reward : {total_reward}")
             print(f"Average Loss : {average_loss:.1f}")
             print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
             print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions")
-            print("-" * 50)
+            print(f"{'-' * 50}\n")
 
     print(f"max len: {max_len}")
-    print(f"board:")
+    print("board:")
     max_board.draw()
 
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 10))
