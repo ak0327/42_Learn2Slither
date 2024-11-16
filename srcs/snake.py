@@ -7,10 +7,10 @@ import copy
 import matplotlib.pyplot as plt
 import random
 import sys
-
 import torch
 import numpy as np
 
+from colorama import Fore, Style
 from distutils.util import strtobool
 from tqdm import tqdm
 from pathlib import Path
@@ -41,6 +41,13 @@ def train(visual):
     snake_len_history = []
     ave_len_history = []
 
+    wall_collision_history = []
+    body_collision_history = []
+    body_empty_history = []
+
+    green_apple_history = []
+    red_apple_history = []
+
     for session in tqdm(range(sessions), desc="Training"):
         state = env.reset()
         total_loss = 0
@@ -59,8 +66,23 @@ def train(visual):
             itr += 1
             state = next_state
 
-        # if done and itr < MAX_STEPS_PER_EPISODE:
-        #     total_reward -= (MAX_STEPS_PER_EPISODE - itr)
+        if session + 1 == 1 or (session + 1) % 100 == 0:
+            total = env.wall_collision_count + env.body_collision_count + env.body_empty_count
+            if total > 0:
+                wall_collision_history.append(env.wall_collision_count / total * 100)
+                body_collision_history.append(env.body_collision_count / total * 100)
+                body_empty_history.append(env.body_empty_count / total * 100)
+            else:
+                wall_collision_history.append(0)
+                body_collision_history.append(0)
+                body_empty_history.append(0)
+            # カウンターをリセット
+            env.wall_collision_count = 0
+            env.body_collision_count = 0
+            env.body_empty_count = 0
+
+        green_apple_history.append(env.eat_green_apple_count)
+        red_apple_history.append(env.eat_red_apple_count)
 
         average_loss = total_loss / itr
         loss_history.append(average_loss)
@@ -81,20 +103,26 @@ def train(visual):
             state_tensor = torch.tensor(state, dtype=torch.float32)
             q_values = agent.qnet(state_tensor).detach().numpy()
             env.draw_with_q_values(q_values)
-            print(f"\n{'=' * 50}\n")
+            print(f"\n{'=' * 50}")
             print(f"Session [{session + 1} / {sessions + 1}]")
-            print(f"Itrs         : {itr}")
-            print(f"Total Reward : {total_reward}")
-            print(f"Average Loss : {average_loss:.1f}\n")
-            print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
-            print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions")
+            print(f" Itrs         : {itr}")
+            print(f" Total Reward : {total_reward:.2f}")
+            print(f" Average Loss : {average_loss:.1f}\n")
+
+            print(f"{Fore.CYAN} Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f}){Style.RESET_ALL}")
+            print(f"{Fore.CYAN} Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions\n{Style.RESET_ALL}")
+
+            print(f"Game Over")
+            print(f" Wall Collision: {wall_collision_history[-1]:.1f}%")
+            print(f" Body Collision: {body_collision_history[-1]:.1f}%")
+            print(f" Body Empty    : {body_empty_history[-1]:.1f}%")
             print(f"{'=' * 50}\n")
 
-    print(f"max len: {max_len}")
-    print("board:")
+    print(f"\nMax Len: {max_len}")
+    print("Board:")
     max_board.draw()
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 10))
+    fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, 1, figsize=(10, 10))
 
     ax1.set_xlabel('Episode')
     ax1.set_ylabel('Loss')
@@ -111,6 +139,21 @@ def train(visual):
     ax4.set_xlabel('Episode')
     ax4.set_ylabel('Ave Length')
     ax4.plot(ave_len_history)
+
+    ax5.set_xlabel('Episode (x100)')
+    ax5.set_ylabel('GameOver %')
+    history_length = len(wall_collision_history)
+    episodes = range(100, (history_length * 100) + 1, 100)
+    ax5.plot(episodes, wall_collision_history, label='Wall Collision')
+    ax5.plot(episodes, body_collision_history, label='Body Collision')
+    ax5.plot(episodes, body_empty_history, label='Body Empty')
+    ax5.legend()
+
+    ax6.set_xlabel('Episode')
+    ax6.set_ylabel('Apple')
+    ax6.plot(green_apple_history, label='Green Apple')
+    ax6.plot(red_apple_history, label='Red Apple')
+    ax6.legend()
 
     plt.tight_layout()
     plt.show()

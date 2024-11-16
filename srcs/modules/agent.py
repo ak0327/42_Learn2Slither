@@ -32,10 +32,11 @@ class QNet(nn.Module):
 
 class QLearningAgent:
     def __init__(self):
-        self.gamma = 0.95
-        self.lr = 0.01
+        self.gamma = 0.85
+        # self.gamma = 0.9
+        self.lr = 0.001
 
-        self.epsilon = 0.5
+        self.epsilon = 0.3
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.9995
 

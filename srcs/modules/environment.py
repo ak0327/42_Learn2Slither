@@ -35,7 +35,7 @@ class BoardElements:
     SNAKE_BODY = _Element("S", Fore.BLUE)
     GREEN_APPLE = _Element("G", Fore.GREEN)
     RED_APPLE = _Element("R", Fore.RED)
-    EMPTY = _Element("0", Fore.LIGHTBLACK_EX)
+    EMPTY  = _Element("0", Fore.LIGHTBLACK_EX)
 
     _elements = [WALL, SNAKE_HEAD, SNAKE_BODY, GREEN_APPLE, RED_APPLE, EMPTY]
 
@@ -77,16 +77,23 @@ class Board:
         self.NUM_OF_GREEN_APPLES = 2
         self.NUM_OF_RED_APPLES = 1
 
-        self.REWARD_JUST_MOVE = -0.1
-        self.REWARD_EAT_GREEN_APPLE = 50
-        self.REWARD_EAT_RED_APPLE = -20
+        self.REWARD_JUST_MOVE = -1
+        self.REWARD_EAT_GREEN_APPLE = 20
+        self.REWARD_EAT_RED_APPLE = -5
         self.REWARD_BODY_COLLISION = -100
         self.REWARD_WALL_COLLISION = -20
-        self.REWARD_GAME_OVER = -100
+        self.REWARD_GAME_OVER = -20
 
         self.snake = deque()  # deque([head, .., tail])
         self.green_apples = []
         self.red_apples = []
+
+        self.wall_collision_count = 0
+        self.body_collision_count = 0
+        self.body_empty_count = 0
+
+        self.eat_green_apple_count = 0
+        self.eat_red_apple_count = 0
 
         self.reset()
 
@@ -217,14 +224,17 @@ class Board:
             self.green_apples.remove(new_head)
             self._extend_snake()
             self._put_apple(apple=BoardElements.GREEN_APPLE)
+            self.eat_green_apple_count += 1
             reward = self.REWARD_EAT_GREEN_APPLE
         elif new_head in self.red_apples:
             self.red_apples.remove(new_head)
             self._shrink_snake()
             self._put_apple(apple=BoardElements.RED_APPLE)
+            self.eat_red_apple_count += 1
             reward = self.REWARD_EAT_RED_APPLE
             if len(self.snake) == 0:
                 self.done = True
+                self.body_empty_count += 1
                 return self.REWARD_GAME_OVER
         else:
             reward = self.REWARD_JUST_MOVE
