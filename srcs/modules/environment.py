@@ -62,6 +62,13 @@ class MoveTo(Enum):
     def directions(cls):
         return [direction.direction for direction in cls]
 
+    @classmethod
+    def from_id(cls, id: int) -> 'MoveTo':
+        for move in cls:
+            if move.value["id"] == id:
+                return move
+        raise ValueError(f"No MoveTo member with id {id}")
+
 
 class Board:
     def __init__(self, board_size=10):
@@ -224,6 +231,7 @@ class Board:
         if self.done:
             return self.board, 0, self.done
 
+        # action = list(MoveTo)[action]
         self.snake_direction = action.direction
 
         reward = self._move_to_direction()

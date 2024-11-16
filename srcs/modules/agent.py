@@ -1,3 +1,5 @@
+from modules.environment import MoveTo
+
 import numpy as np
 
 import torch
@@ -33,7 +35,7 @@ class QLearningAgent:
         self.gamma = 0.9
         self.lr = 0.01
 
-        self.epsilon = 0.1
+        self.epsilon = 0.5
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
 
@@ -45,19 +47,20 @@ class QLearningAgent:
         self.criterion = nn.MSELoss()
         # self.criterion = nn.SmoothL1Loss()
 
-    def get_action(self, state: np.ndarray) -> int:
+    def get_action(self, state: np.ndarray) -> MoveTo:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
         if np.random.rand() < self.epsilon:
-            return np.random.choice(self.action_size)
+            action_id = np.random.choice(self.action_size)
         else:
             with torch.no_grad():
                 qs = self.qnet(torch.tensor(state, dtype=torch.float32))
-                return torch.argmax(qs).item()
+                action_id = torch.argmax(qs).item()
+        return MoveTo.from_id(action_id)
 
     def update(
             self,
             state: np.ndarray,
-            action: int,
+            action: MoveTo,
             reward: float,
             next_state: np.ndarray,
             done: bool
@@ -74,7 +77,7 @@ class QLearningAgent:
 
         target = reward + self.gamma * next_q
         qs = self.qnet(state)  # (1, action_size)
-        q = qs.squeeze(0)[action]  # (1, 4) -> 1次元(4,)
+        q = qs.squeeze(0)[action.id]  # (1, 4) -> 1次元(4,)
 
         loss = self.criterion(q, target)
 
