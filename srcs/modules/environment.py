@@ -70,10 +70,10 @@ class Board:
         self.NUM_OF_GREEN_APPLES = 2
         self.NUM_OF_RED_APPLES = 1
 
-        self.REWARD_JUST_MOVE = -5
-        self.REWARD_EAT_GREEN_APPLE = 500
-        self.REWARD_EAT_RED_APPLE = -100
-        self.REWARD_GAME_OVER = -2000
+        self.REWARD_JUST_MOVE = -1
+        self.REWARD_EAT_GREEN_APPLE = 50
+        self.REWARD_EAT_RED_APPLE = -20
+        self.REWARD_GAME_OVER = -100
 
         self.snake = deque()  # deque([head, .., tail])
         self.green_apples = []
