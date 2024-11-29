@@ -1,23 +1,30 @@
-import copy
-
-from modules.parser import str_expected, int_expected
+from modules.parser import str_expected, int_range, validate_extention
 from modules.environment import Board
 from modules.agent import QLearningAgent
+from modules.io import save_agent, load_agent
 
-import sys
 import argparse
+import copy
 import matplotlib.pyplot as plt
-
+import random
+import sys
 import torch
+import numpy as np
 
-from distutils.util import strtobool
+from colorama import Fore, Style
 from tqdm import tqdm
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-def train(visual):
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+
+def train(visual, sessions) -> QLearningAgent:
     env = Board()
     agent = QLearningAgent()
 
@@ -33,6 +40,13 @@ def train(visual):
     reward_history = []
     snake_len_history = []
     ave_len_history = []
+
+    wall_collision_history = []
+    body_collision_history = []
+    body_empty_history = []
+
+    green_apple_history = []
+    red_apple_history = []
 
     for session in tqdm(range(sessions), desc="Training"):
         state = env.reset()
@@ -52,8 +66,23 @@ def train(visual):
             itr += 1
             state = next_state
 
-        # if done and itr < MAX_STEPS_PER_EPISODE:
-        #     total_reward -= (MAX_STEPS_PER_EPISODE - itr)
+        if session + 1 == 1 or (session + 1) % 100 == 0:
+            total = env.wall_collision_count + env.body_collision_count + env.body_empty_count
+            if total > 0:
+                wall_collision_history.append(env.wall_collision_count / total * 100)
+                body_collision_history.append(env.body_collision_count / total * 100)
+                body_empty_history.append(env.body_empty_count / total * 100)
+            else:
+                wall_collision_history.append(0)
+                body_collision_history.append(0)
+                body_empty_history.append(0)
+            # カウンターをリセット
+            env.wall_collision_count = 0
+            env.body_collision_count = 0
+            env.body_empty_count = 0
+
+        green_apple_history.append(env.eat_green_apple_count)
+        red_apple_history.append(env.eat_red_apple_count)
 
         average_loss = total_loss / itr
         loss_history.append(average_loss)
@@ -71,21 +100,31 @@ def train(visual):
             max_board = copy.deepcopy(env)
 
         if visual == "on" and (session + 1 == 1 or (session + 1) % visualization_interval == 0):
-            q_values = agent.qnet(torch.tensor(state, dtype=torch.float32)).detach().numpy()
+            state_tensor = torch.tensor(state, dtype=torch.float32)
+            q_values = agent.qnet(state_tensor).detach().numpy()
             env.draw_with_q_values(q_values)
-            print(f"\nSession [{session + 1} / {sessions + 1}]")
-            print(f"Itrs         : {itr}")
-            print(f"Total Reward : {total_reward}")
-            print(f"Average Loss : {average_loss:.1f}")
-            print(f"Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
-            print(f"Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions")
-            print(f"{'-' * 50}\n")
+            print(f"\n{'=' * 50}")
+            print(f"Session [{session + 1} / {sessions + 1}]")
+            print(f" Itrs         : {itr}")
+            print(f" Total Reward : {total_reward:.2f}")
+            print(f" Average Loss : {average_loss:.1f}\n")
 
-    print(f"max len: {max_len}")
-    print("board:")
+            print(f"{Fore.CYAN}"
+                  f" Max Len      : {max_len} (Itrs:{max_len_itrs}, reward:{max_len_rewards:.2f})")
+            print(f" Least Ave Len: {recent_average_len:.2f} at least {recent_interval} sessions\n"
+                  f"{Style.RESET_ALL}")
+
+            print("Game Over")
+            print(f" Wall Collision: {wall_collision_history[-1]:.1f}%")
+            print(f" Body Collision: {body_collision_history[-1]:.1f}%")
+            print(f" Body Empty    : {body_empty_history[-1]:.1f}%")
+            print(f"{'=' * 50}\n")
+
+    print(f"\nMax Len: {max_len}")
+    print("Board:")
     max_board.draw()
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 10))
+    fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(6, 1, figsize=(10, 10))
 
     ax1.set_xlabel('Episode')
     ax1.set_ylabel('Loss')
@@ -103,12 +142,75 @@ def train(visual):
     ax4.set_ylabel('Ave Length')
     ax4.plot(ave_len_history)
 
+    ax5.set_xlabel('Episode (x100)')
+    ax5.set_ylabel('GameOver %')
+    history_length = len(wall_collision_history)
+    episodes = range(100, (history_length * 100) + 1, 100)
+    ax5.plot(episodes, wall_collision_history, label='Wall Collision')
+    ax5.plot(episodes, body_collision_history, label='Body Collision')
+    ax5.plot(episodes, body_empty_history, label='Body Empty')
+    ax5.legend()
+
+    ax6.set_xlabel('Episode')
+    ax6.set_ylabel('Apple')
+    ax6.plot(green_apple_history, label='Green Apple')
+    ax6.plot(red_apple_history, label='Red Apple')
+    ax6.legend()
+
     plt.tight_layout()
     plt.show()
 
+    return agent
 
-def main(visual, random_state: int = 42):
-    train(visual)
+
+def eval_agent(agent: QLearningAgent):
+    env = Board()
+
+    state = env.reset()
+    total_reward = 0
+    itr = 0
+    done = False
+
+    while not done:
+        action = agent.get_action(state)
+        next_state, reward, done = env.step(action)
+        itr += 1
+        total_reward += reward
+        state = next_state
+
+    env.draw()
+    print(f"itr: {itr}")
+    print(f"total_reward: {total_reward}")
+
+
+def main(
+        visual,
+        sessions: int,
+        eval: bool,
+        save_path: str = "model/agent.pkl",
+        load_path: str = "model/agent.pkl",
+        random_state: int = 42,
+):
+    set_seed(random_state)
+    try:
+        if not eval:
+            trained_agent = train(visual, sessions)
+            save_agent(agent=trained_agent, path=save_path)
+        else:
+            trained_agent = load_agent(load_path)
+            eval_agent(trained_agent)
+
+    except Exception as e:
+        print(f"Fatal error: {str(e)}")
+        print("Traceback:")
+        _tb = e.__traceback__
+        while _tb is not None:
+            _filename = _tb.tb_frame.f_code.co_filename
+            _line_number = _tb.tb_lineno
+            print(f"File '{_filename}', line {_line_number}")
+            _tb = _tb.tb_next
+        print(f"Error: {str(e)}")
+        sys.exit(1)
 
 
 def parse_arguments():
@@ -123,24 +225,23 @@ def parse_arguments():
     )
     parser.add_argument(
         "-load",
-        type=str,
+        type=validate_extention(["pkl"]),
         help="Path to model load"
     )
     parser.add_argument(
         "-save",
-        type=str,
+        type=validate_extention(["pkl"]),
         help="Path to model save"
     )
     parser.add_argument(
         "-sessions",
-        type=int_expected([1, 10, 100]),
+        type=int_range(min_val=1, max_val=10000),
         default=10,
-        help="Path to model save"
+        help="Number of train sessions"
     )
     parser.add_argument(
         "-eval",
-        type=strtobool,
-        default=0,
+        action="store_true",
         help="Eval mode: true or false"
     )
     return parser.parse_args()
@@ -154,4 +255,10 @@ if __name__ == "__main__":
     print(f" save    : {args.save}")
     print(f" sessions: {args.sessions}")
     print(f" eval    : {bool(args.eval)}")
-    main(visual=args.visual)
+    main(
+        visual=args.visual,
+        sessions=args.sessions,
+        eval=args.eval,
+        save_path=args.save,
+        load_path=args.load,
+    )

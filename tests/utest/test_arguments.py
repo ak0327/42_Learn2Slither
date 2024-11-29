@@ -6,11 +6,17 @@ from srcs import snake
 
 def dict_to_argv(file, arg_dict):
     argv = [file]
+    store_true_options = {"eval"}
+
     for key, value in arg_dict.items():
         if value is None:
             continue
-        argv.append(f'-{key}')
-        argv.append(str(value))
+        if key in store_true_options:
+            if value:
+                argv.append(f'-{key}')
+        else:
+            argv.append(f'-{key}')
+            argv.append(str(value))
     return argv
 
 
@@ -19,10 +25,10 @@ class TestSnakeArgument:
     def setup_class(cls):
         cls.base_args = {
             "visual"  : "on",
-            "load"    : "test_load",
-            "save"    : "test_save",
+            "load"    : "test_load.pkl",
+            "save"    : "test_save.pkl",
             "sessions": "10",
-            "eval"    : "false",
+            "eval"    : False,
         }
         cls.filename = 'snake.py'
 
@@ -30,8 +36,8 @@ class TestSnakeArgument:
         sys.argv = dict_to_argv(self.filename, self.base_args)
         args = snake.parse_arguments()
         assert args.visual == "on"
-        assert args.load == "test_load"
-        assert args.save == "test_save"
+        assert args.load == "test_load.pkl"
+        assert args.save == "test_save.pkl"
         assert args.sessions == 10
         assert not args.eval
 
@@ -40,11 +46,19 @@ class TestSnakeArgument:
         ("visual",  " ",           SystemExit),
         ("visual",  "nothing",     SystemExit),
 
+        ("save",    "",         SystemExit),
+        ("save",    "path",     SystemExit),
+        ("save",    "path.npz", SystemExit),
+
+        ("load",    "",         SystemExit),
+        ("load",    "path",     SystemExit),
+        ("load",    "path.npz", SystemExit),
+
+
         ("sessions", "",        SystemExit),
         ("sessions", "-10",     SystemExit),
         ("sessions", "0",       SystemExit),
-        ("sessions", "11",      SystemExit),
-        ("sessions", "101",     SystemExit),
+        ("sessions", "10001",   SystemExit),
         ("sessions", "2147483647",           SystemExit),
         ("sessions", "2147483648",           SystemExit),
         ("sessions", "-2147483648",          SystemExit),
@@ -56,15 +70,7 @@ class TestSnakeArgument:
         ("sessions", " ",     SystemExit),
         ("sessions", "a",     SystemExit),
         ("sessions", "10a",   SystemExit),
-        ("sessions", "1e100", SystemExit),
-
-        ("eval",    "",     SystemExit),
-        ("eval",    " ",    SystemExit),
-        ("eval",    "-",    SystemExit),
-        ("eval",    "-1",   SystemExit),
-        ("eval",    "10",   SystemExit),
-        ("eval",    "ok",   SystemExit),
-        ("eval",    "non",  SystemExit), ])
+        ("sessions", "1e100", SystemExit), ])
     def test_invalid_arguments(self, field, value, expected_error):
         invalid_args = self.base_args.copy()
         invalid_args[field] = value
@@ -80,18 +86,11 @@ class TestSnakeArgument:
         ("visual",  "OFF",  "off"),
         ("visual",  "OfF",  "off"),
 
-        ("sessions",    "1",    1),
-        ("sessions",    "10",   10),
-        ("sessions",    "100",  100),
-
-        ("eval", "true",    True),
-        ("eval", "True",    True),
-        ("eval", "1",       True),
-        ("eval", "y",       True),
-        ("eval", "yes",     True),
-        ("eval", "false",   False),
-        ("eval", "0",       False),
-        ("eval", "no",      False), ])
+        ("sessions",    "1",      1),
+        ("sessions",    "10",     10),
+        ("sessions",    "100",    100),
+        ("sessions",    "1000",   1000),
+        ("sessions",    "10000",  10000), ])
     def test_valid_argument_variations(self, field, value, expected):
         valid_args = self.base_args.copy()
         valid_args[field] = value

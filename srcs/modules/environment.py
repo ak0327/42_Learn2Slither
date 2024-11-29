@@ -62,6 +62,13 @@ class MoveTo(Enum):
     def directions(cls):
         return [direction.direction for direction in cls]
 
+    @classmethod
+    def from_id(cls, id: int) -> 'MoveTo':
+        for move in cls:
+            if move.value["id"] == id:
+                return move
+        raise ValueError(f"No MoveTo member with id {id}")
+
 
 class Board:
     def __init__(self, board_size=10):
@@ -71,13 +78,22 @@ class Board:
         self.NUM_OF_RED_APPLES = 1
 
         self.REWARD_JUST_MOVE = -1
-        self.REWARD_EAT_GREEN_APPLE = 50
-        self.REWARD_EAT_RED_APPLE = -20
-        self.REWARD_GAME_OVER = -100
+        self.REWARD_EAT_GREEN_APPLE = 20
+        self.REWARD_EAT_RED_APPLE = -5
+        self.REWARD_BODY_COLLISION = -100
+        self.REWARD_WALL_COLLISION = -20
+        self.REWARD_BODY_EMPTY = -20
 
         self.snake = deque()  # deque([head, .., tail])
         self.green_apples = []
         self.red_apples = []
+
+        self.wall_collision_count = 0
+        self.body_collision_count = 0
+        self.body_empty_count = 0
+
+        self.eat_green_apple_count = 0
+        self.eat_red_apple_count = 0
 
         self.reset()
 
@@ -135,7 +151,6 @@ class Board:
                              f" or {BoardElements.RED_APPLE}")
 
         empty_cells = np.argwhere(self.board == BoardElements.EMPTY)
-        empty_cells += len(self.snake)
         if len(empty_cells) == 0:
             raise ValueError("Error: No empty cell")
 
@@ -176,15 +191,14 @@ class Board:
             return True
         return False
 
+    def _is_body_collision(self, pos: tuple):
+        return pos in self.snake
+
     def _is_collision(self, pos: tuple):
         """
         Check for collisions with walls and own body
         """
-        if self._is_wall_collision(pos):
-            return True
-        if pos in self.snake:
-            return True
-        return False
+        return self._is_wall_collision(pos) or self._is_body_collision(pos)
 
     def _move_to_direction(self):
         """
@@ -195,24 +209,33 @@ class Board:
         next_head_x = self.snake[0][1] + self.snake_direction[1]
         new_head = (next_head_y, next_head_x)
 
-        if self._is_collision(new_head):
+        if self._is_wall_collision(new_head):
             self.done = True
-            return self.REWARD_GAME_OVER
+            self.wall_collision_count += 1
+            return self.REWARD_WALL_COLLISION
+
+        if self._is_body_collision(new_head):
+            self.done = True
+            self.body_collision_count += 1
+            return self.REWARD_BODY_COLLISION
 
         reward = 0
         if new_head in self.green_apples:
             self.green_apples.remove(new_head)
             self._extend_snake()
             self._put_apple(apple=BoardElements.GREEN_APPLE)
+            self.eat_green_apple_count += 1
             reward = self.REWARD_EAT_GREEN_APPLE
         elif new_head in self.red_apples:
             self.red_apples.remove(new_head)
             self._shrink_snake()
             self._put_apple(apple=BoardElements.RED_APPLE)
+            self.eat_red_apple_count += 1
             reward = self.REWARD_EAT_RED_APPLE
             if len(self.snake) == 0:
                 self.done = True
-                return self.REWARD_GAME_OVER
+                self.body_empty_count += 1
+                reward = self.REWARD_BODY_EMPTY
         else:
             reward = self.REWARD_JUST_MOVE
 
@@ -225,7 +248,6 @@ class Board:
             return self.board, 0, self.done
 
         self.snake_direction = action.direction
-
         reward = self._move_to_direction()
         self.update_board()
         return self._encode_state(), reward, self.done
@@ -276,7 +298,7 @@ class Board:
             dx = direction[1]
 
             distance = 0
-            distances = [0, 0, 0, 0]
+            distances = [0.0, 0.0, 0.0, 0.0]
 
             y, x = head_pos[0], head_pos[1]
             while 0 <= y < self.board_size and 0 <= x < self.board_size:
@@ -285,16 +307,16 @@ class Board:
                 distance += 1
 
                 if y < 0 or self.board_size <= y or x < 0 or self.board_size <= x:
-                    distances[FEATURE_WALL] = distance
+                    distances[FEATURE_WALL] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.SNAKE_BODY:
-                    distances[FEATURE_BODY] = distance
+                    distances[FEATURE_BODY] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.GREEN_APPLE:
-                    distances[FEATURE_GREEN_APPLE] = distance
+                    distances[FEATURE_GREEN_APPLE] = distance / self.board_size
                     break
                 if self.board[y][x] == BoardElements.RED_APPLE:
-                    distances[FEATURE_RED_APPLE] = distance
+                    distances[FEATURE_RED_APPLE] = distance / self.board_size
                     break
 
             state[id] = distances
