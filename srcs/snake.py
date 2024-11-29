@@ -1,6 +1,7 @@
 from modules.parser import str_expected, int_expected
 from modules.environment import Board
 from modules.agent import QLearningAgent
+from modules.io import save_agent
 
 import argparse
 import copy
@@ -24,7 +25,7 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-def train(visual):
+def train(visual) -> QLearningAgent:
     env = Board()
     agent = QLearningAgent()
 
@@ -160,11 +161,16 @@ def train(visual):
     plt.tight_layout()
     plt.show()
 
+    return agent
+
 
 def main(visual, random_state: int = 42):
     try:
         set_seed(random_state)
-        train(visual)
+        trained_agent = train(visual)
+
+        agent_save_path = "model/agent.pkl"
+        save_agent(agent=trained_agent, path=agent_save_path)
 
     except Exception as e:
         print(f"Fatal error: {str(e)}")

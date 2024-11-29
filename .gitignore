@@ -16,6 +16,8 @@
 !config/pytest.ini
 !config/requirements.txt
 
+!model
+
 !srcs
 !srcs/snake.py
 
@@ -23,6 +25,7 @@
 !srcs/modules/parser.py
 !srcs/modules/environment.py
 !srcs/modules/agent.py
+!srcs/modules/io.py
 
 !tests
 !tests/utest
