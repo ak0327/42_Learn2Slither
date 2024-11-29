@@ -12,7 +12,6 @@ import torch
 import numpy as np
 
 from colorama import Fore, Style
-from distutils.util import strtobool
 from tqdm import tqdm
 from pathlib import Path
 project_root = Path(__file__).parent.parent
@@ -165,14 +164,29 @@ def train(visual) -> QLearningAgent:
 
 
 def eval_agent(agent: QLearningAgent):
-    # todo
-    pass
+    env = Board()
+
+    state = env.reset()
+    total_reward = 0
+    itr = 0
+    done = False
+
+    while not done:
+        action = agent.get_action(state)
+        next_state, reward, done = env.step(action)
+        itr += 1
+        total_reward += reward
+        state = next_state
+
+    env.draw()
+    print(f"itr: {itr}")
+    print(f"total_reward: {total_reward}")
 
 
 def main(
         visual,
         eval: bool,
-        random_state: int = 42
+        random_state: int = 42,
 ):
     set_seed(random_state)
     agent_path = "model/agent.pkl"
@@ -182,7 +196,7 @@ def main(
             save_agent(agent=trained_agent, path=agent_path)
         else:
             trained_agent = load_agent(agent_path)
-            eval_agent(agent_path)
+            eval_agent(trained_agent)
 
     except Exception as e:
         print(f"Fatal error: {str(e)}")
@@ -225,8 +239,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "-eval",
-        type=strtobool,
-        default=0,
+        action="store_true",
         help="Eval mode: true or false"
     )
     return parser.parse_args()
@@ -240,4 +253,7 @@ if __name__ == "__main__":
     print(f" save    : {args.save}")
     print(f" sessions: {args.sessions}")
     print(f" eval    : {bool(args.eval)}")
-    main(visual=args.visual)
+    main(
+        visual=args.visual,
+        eval=args.eval,
+    )
