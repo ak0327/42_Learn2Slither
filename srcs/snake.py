@@ -187,16 +187,17 @@ def main(
         visual,
         sessions: int,
         eval: bool,
+        save_path: str = "model/agent.pkl",
+        load_path: str = "model/agent.pkl",
         random_state: int = 42,
 ):
     set_seed(random_state)
-    agent_path = "model/agent.pkl"
     try:
         if not eval:
             trained_agent = train(visual, sessions)
-            save_agent(agent=trained_agent, path=agent_path)
+            save_agent(agent=trained_agent, path=save_path)
         else:
-            trained_agent = load_agent(agent_path)
+            trained_agent = load_agent(load_path)
             eval_agent(trained_agent)
 
     except Exception as e:
@@ -258,4 +259,6 @@ if __name__ == "__main__":
         visual=args.visual,
         sessions=args.sessions,
         eval=args.eval,
+        save_path=args.save,
+        load_path=args.load,
     )

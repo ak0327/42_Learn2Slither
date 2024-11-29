@@ -38,11 +38,11 @@ exec:
 
 .PHONY: run
 run:
-	docker compose exec learn2slither python3 srcs/snake.py -sessions 10000
+	docker compose exec learn2slither python3 srcs/snake.py -sessions 10000 -save ./model/agent.pkl
 
 .PHONY: eval
 eval:
-	docker compose exec learn2slither python3 srcs/snake.py -eval
+	docker compose exec learn2slither python3 srcs/snake.py -eval -load ./model/agent.pkl
 
 
 .PHONY: test
