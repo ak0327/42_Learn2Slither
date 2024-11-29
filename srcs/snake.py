@@ -1,7 +1,7 @@
 from modules.parser import str_expected, int_expected
 from modules.environment import Board
 from modules.agent import QLearningAgent
-from modules.io import save_agent
+from modules.io import save_agent, load_agent
 
 import argparse
 import copy
@@ -164,13 +164,25 @@ def train(visual) -> QLearningAgent:
     return agent
 
 
-def main(visual, random_state: int = 42):
-    try:
-        set_seed(random_state)
-        trained_agent = train(visual)
+def eval_agent(agent: QLearningAgent):
+    # todo
+    pass
 
-        agent_save_path = "model/agent.pkl"
-        save_agent(agent=trained_agent, path=agent_save_path)
+
+def main(
+        visual,
+        eval: bool,
+        random_state: int = 42
+):
+    set_seed(random_state)
+    agent_path = "model/agent.pkl"
+    try:
+        if not eval:
+            trained_agent = train(visual)
+            save_agent(agent=trained_agent, path=agent_path)
+        else:
+            trained_agent = load_agent(agent_path)
+            eval_agent(agent_path)
 
     except Exception as e:
         print(f"Fatal error: {str(e)}")
