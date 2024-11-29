@@ -1,4 +1,4 @@
-from modules.parser import str_expected, int_range
+from modules.parser import str_expected, int_range, validate_extention
 from modules.environment import Board
 from modules.agent import QLearningAgent
 from modules.io import save_agent, load_agent
@@ -225,12 +225,12 @@ def parse_arguments():
     )
     parser.add_argument(
         "-load",
-        type=str,
+        type=validate_extention(["pkl"]),
         help="Path to model load"
     )
     parser.add_argument(
         "-save",
-        type=str,
+        type=validate_extention(["pkl"]),
         help="Path to model save"
     )
     parser.add_argument(

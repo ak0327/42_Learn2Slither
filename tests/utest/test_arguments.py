@@ -25,8 +25,8 @@ class TestSnakeArgument:
     def setup_class(cls):
         cls.base_args = {
             "visual"  : "on",
-            "load"    : "test_load",
-            "save"    : "test_save",
+            "load"    : "test_load.pkl",
+            "save"    : "test_save.pkl",
             "sessions": "10",
             "eval"    : False,
         }
@@ -36,8 +36,8 @@ class TestSnakeArgument:
         sys.argv = dict_to_argv(self.filename, self.base_args)
         args = snake.parse_arguments()
         assert args.visual == "on"
-        assert args.load == "test_load"
-        assert args.save == "test_save"
+        assert args.load == "test_load.pkl"
+        assert args.save == "test_save.pkl"
         assert args.sessions == 10
         assert not args.eval
 
@@ -45,6 +45,15 @@ class TestSnakeArgument:
         ("visual",  "",            SystemExit),
         ("visual",  " ",           SystemExit),
         ("visual",  "nothing",     SystemExit),
+
+        ("save",    "",         SystemExit),
+        ("save",    "path",     SystemExit),
+        ("save",    "path.npz", SystemExit),
+
+        ("load",    "",         SystemExit),
+        ("load",    "path",     SystemExit),
+        ("load",    "path.npz", SystemExit),
+
 
         ("sessions", "",        SystemExit),
         ("sessions", "-10",     SystemExit),
