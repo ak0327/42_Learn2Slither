@@ -1,4 +1,4 @@
-from modules.parser import str_expected, int_expected
+from modules.parser import str_expected, int_range
 from modules.environment import Board
 from modules.agent import QLearningAgent
 from modules.io import save_agent, load_agent
@@ -24,7 +24,7 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
-def train(visual) -> QLearningAgent:
+def train(visual, sessions) -> QLearningAgent:
     env = Board()
     agent = QLearningAgent()
 
@@ -185,6 +185,7 @@ def eval_agent(agent: QLearningAgent):
 
 def main(
         visual,
+        sessions: int,
         eval: bool,
         random_state: int = 42,
 ):
@@ -192,7 +193,7 @@ def main(
     agent_path = "model/agent.pkl"
     try:
         if not eval:
-            trained_agent = train(visual)
+            trained_agent = train(visual, sessions)
             save_agent(agent=trained_agent, path=agent_path)
         else:
             trained_agent = load_agent(agent_path)
@@ -233,9 +234,9 @@ def parse_arguments():
     )
     parser.add_argument(
         "-sessions",
-        type=int_expected([1, 10, 100]),
+        type=int_range(min_val=1, max_val=10000),
         default=10,
-        help="Path to model save"
+        help="Number of train sessions"
     )
     parser.add_argument(
         "-eval",
@@ -255,5 +256,6 @@ if __name__ == "__main__":
     print(f" eval    : {bool(args.eval)}")
     main(
         visual=args.visual,
+        sessions=args.sessions,
         eval=args.eval,
     )

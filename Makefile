@@ -38,7 +38,7 @@ exec:
 
 .PHONY: run
 run:
-	docker compose exec learn2slither python3 srcs/snake.py
+	docker compose exec learn2slither python3 srcs/snake.py -sessions 10000
 
 .PHONY: eval
 eval:
